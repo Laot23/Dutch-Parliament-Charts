@@ -41,7 +41,10 @@ npm install
 npm start
 ```
 
+4. Open front-end
+```bash
 Open index.html in your browser
+```
 
 
 ## Contributing
