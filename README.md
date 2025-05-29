@@ -1,24 +1,34 @@
-# Dutch Parliament Charts
+# Dutch Parliament Data Visualization
 
-A data visualization project that analyzes and displays information about the Dutch Parliament.
+A Node.js application that provides data visualization and analysis of Dutch Parliament activities through an interactive web interface.
 
 ## Description
 
-This project provides interactive charts and visualizations of Dutch Parliament data, helping users understand parliamentary activities, voting patterns, and political trends.
+This project serves as a data visualization platform that connects to the Dutch Parliament's OData API to fetch and display information about parliamentary activities, attendance records, and voting patterns. It provides an intuitive interface for exploring and analyzing parliamentary data.
 
 ## Features
 
-- Interactive data visualizations
-- Historical parliamentary data analysis
-- Voting pattern insights
-- Political party comparisons
+### Backend Features
+- Real-time data fetching from the Dutch Parliament OData API
+- RESTful API endpoints for attendance and activity data
+- Pagination support for large datasets
+- Cross-origin resource sharing (CORS) enabled
+
+### Frontend Features
+- Modern, responsive UI with gradient backgrounds and card-based design
+- Interactive data visualization using Chart.js
+- Real-time data filtering and search capabilities
+- Dynamic table views with sticky headers
+- Loading states and error handling
+- Statistical overview cards
+- Mobile-friendly layout with responsive grid system
 
 ## Setup
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/dutch-parliament-charts.git
-cd dutch-parliament-charts
+git clone https://github.com/yourusername/dutch-parlement.git
+cd dutch-parlement
 ```
 
 2. Install dependencies:
@@ -26,17 +36,13 @@ cd dutch-parliament-charts
 npm install
 ```
 
-3. Start the development server:
+3. Start the server:
 ```bash
-npm run dev
+npm start
 ```
 
-## Usage
+Open index.html in your browser
 
-Once the application is running, you can:
-- View different parliamentary charts and visualizations
-- Filter data by time period, political party, or specific topics
-- Export visualizations for further analysis
 
 ## Contributing
 
