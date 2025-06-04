@@ -107,7 +107,7 @@ app.get('/api/attendance', async (req, res) => {
 
         // Build expand clause for getting participant data
         const expands = [
-            "ActiviteitActor($filter=relatie eq 'Deelnemer';$expand=Persoon,Fractie)"
+            "ActiviteitActor($expand=Persoon,Fractie)"
         ];
 
         // Build the query

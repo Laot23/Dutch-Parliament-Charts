@@ -381,10 +381,31 @@
                 <div class="chart-title">Top Attendees</div>
                 <canvas id="topAttendeesChart"></canvas>
             </div>
+            <div class="chart-wrapper">
+                <div class="chart-title">Attendance by Role</div>
+                <canvas id="roleChart"></canvas>
+            </div>
+            <div class="chart-wrapper">
+                <div class="chart-title">Activity Type Distribution</div>
+                <canvas id="activityTypeChart"></canvas>
+            </div>
         </div>
     </div>
 
     <script>
+        // Utility function to categorize activity titles
+        function categorizeActivity(activityTitle) {
+            if (!activityTitle) return "Other Activities";
+            const title = activityTitle.toLowerCase();
+            if (title.includes("plenaire vergadering")) return "Plenary Meeting";
+            if (title.includes("commissievergadering")) return "Committee Meeting";
+            if (title.includes("algemeen overleg")) return "General Consultation";
+            if (title.includes("hoorzitting")) return "Hearing";
+            if (title.includes("rondetafelgesprek")) return "Round Table";
+            if (title.includes("werkbezoek")) return "Work Visit";
+            return "Other Activities";
+        }
+
         let allData = [];
         let filteredData = [];
         let currentPage = 0;
@@ -669,6 +690,80 @@
                     }
                 }
             );
+
+            // 5. Attendance by Role Chart
+            const roleData = {};
+            allData.forEach(d => {
+                const role = d.role || 'Unknown';
+                roleData[role] = (roleData[role] || 0) + 1;
+            });
+            const roleLabels = Object.keys(roleData);
+            const roleValues = Object.values(roleData);
+
+            if (document.getElementById('roleChart')) {
+                 if (chartInstances.role) chartInstances.role.destroy();
+                chartInstances.role = new Chart(
+                    document.getElementById('roleChart').getContext('2d'),
+                    {
+                        type: 'pie',
+                        data: {
+                            labels: roleLabels,
+                            datasets: [{
+                                label: 'Attendance by Role',
+                                data: roleValues,
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)',
+                                    'rgba(255, 206, 86, 0.7)', 'rgba(75, 192, 192, 0.7)',
+                                    'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)'
+                                ],
+                                borderColor: 'rgba(255, 255, 255, 0.8)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' } }
+                        }
+                    }
+                );
+            }
+
+            // 6. Activity Type Distribution Chart
+            const activityTypeCounts = {};
+            allData.forEach(d => {
+                const category = categorizeActivity(d.activityTitle);
+                activityTypeCounts[category] = (activityTypeCounts[category] || 0) + 1;
+            });
+            const activityTypeLabels = Object.keys(activityTypeCounts);
+            const activityTypeValues = Object.values(activityTypeCounts);
+
+            if (document.getElementById('activityTypeChart')) {
+                if (chartInstances.activityType) chartInstances.activityType.destroy();
+                chartInstances.activityType = new Chart(
+                    document.getElementById('activityTypeChart').getContext('2d'),
+                    {
+                        type: 'pie',
+                        data: {
+                            labels: activityTypeLabels,
+                            datasets: [{
+                                label: 'Activity Type Distribution',
+                                data: activityTypeValues,
+                                backgroundColor: [
+                                    'rgba(255, 159, 64, 0.7)', 'rgba(153, 102, 255, 0.7)',
+                                    'rgba(75, 192, 192, 0.7)', 'rgba(255, 206, 86, 0.7)',
+                                    'rgba(54, 162, 235, 0.7)', 'rgba(255, 99, 132, 0.7)'
+                                ],
+                                borderColor: 'rgba(255, 255, 255, 0.8)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'top' } }
+                        }
+                    }
+                );
+            }
         }
         
         function displayResults(dataForTable, metadata) {
