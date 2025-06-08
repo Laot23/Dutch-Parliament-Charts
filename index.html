@@ -643,20 +643,66 @@
             );
 
             // 4. Top Attendees Chart
-            const personCounts = {};
+            const personAttendance = {}; // Stores { personName: { count: N, fraction: 'Fraction Name' } }
             allData.forEach(d => {
                 const person = d.personName;
+                const fraction = d.fraction || 'Unknown';
                 if (person && person.trim() !== '') {
-                    personCounts[person] = (personCounts[person] || 0) + 1;
+                    if (!personAttendance[person]) {
+                        personAttendance[person] = { count: 0, fraction: fraction };
+                    }
+                    personAttendance[person].count++;
                 }
             });
 
-            const sortedPeople = Object.entries(personCounts)
-                .sort(([,a], [,b]) => b - a)
+            const sortedPeople = Object.entries(personAttendance)
+                .sort(([,a], [,b]) => b.count - a.count)
                 .slice(0, 10);
 
             const topPersonLabels = sortedPeople.map(([name]) => name);
-            const topPersonCounts = sortedPeople.map(([,count]) => count);
+            const topPersonCounts = sortedPeople.map(([,data]) => data.count);
+            const topPersonFractions = sortedPeople.map(([,data]) => data.fraction);
+
+            // Generate consistent colors for fractions
+            const fractionColors = {};
+            const availableColors = [
+                'rgba(255, 99, 132, 0.6)',   // Red
+                'rgba(54, 162, 235, 0.6)',   // Blue
+                'rgba(255, 206, 86, 0.6)',   // Yellow
+                'rgba(75, 192, 192, 0.6)',   // Green
+                'rgba(153, 102, 255, 0.6)',  // Purple
+                'rgba(255, 159, 64, 0.6)',   // Orange
+                'rgba(100, 100, 100, 0.6)',  // Grey
+                'rgba(200, 0, 0, 0.6)',      // Dark Red
+                'rgba(0, 200, 0, 0.6)',      // Dark Green
+                'rgba(0, 0, 200, 0.6)'       // Dark Blue
+            ];
+            const borderColors = [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)',
+                'rgba(100, 100, 100, 1)',
+                'rgba(200, 0, 0, 1)',
+                'rgba(0, 200, 0, 1)',
+                'rgba(0, 0, 200, 1)'
+            ];
+            let colorIndex = 0;
+
+            topPersonFractions.forEach(fraction => {
+                if (!fractionColors[fraction]) {
+                    fractionColors[fraction] = {
+                        backgroundColor: availableColors[colorIndex % availableColors.length],
+                        borderColor: borderColors[colorIndex % borderColors.length]
+                    };
+                    colorIndex++;
+                }
+            });
+
+            const backgroundColors = topPersonFractions.map(fraction => fractionColors[fraction].backgroundColor);
+            const borderColorsForChart = topPersonFractions.map(fraction => fractionColors[fraction].borderColor);
 
             chartInstances.topAttendees = new Chart(
                 document.getElementById('topAttendeesChart').getContext('2d'),
@@ -667,8 +713,8 @@
                         datasets: [{
                             label: 'Attendance Count',
                             data: topPersonCounts,
-                            backgroundColor: 'rgba(40, 167, 69, 0.6)',
-                            borderColor: 'rgba(40, 167, 69, 1)',
+                            backgroundColor: backgroundColors,
+                            borderColor: borderColorsForChart,
                             borderWidth: 1
                         }]
                     },
@@ -676,7 +722,23 @@
                         indexAxis: 'y',
                         responsive: true,
                         plugins: {
-                            legend: { display: false }
+                            legend: { display: true }, // Display legend to show fraction colors
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.x !== null) {
+                                            label += context.parsed.x;
+                                        }
+                                        // Add fraction to tooltip
+                                        label += ' (Fraction: ' + topPersonFractions[context.dataIndex] + ')';
+                                        return label;
+                                    }
+                                }
+                            }
                         },
                         scales: {
                             x: {
@@ -697,32 +759,44 @@
                 const role = d.role || 'Unknown';
                 roleData[role] = (roleData[role] || 0) + 1;
             });
-            const roleLabels = Object.keys(roleData);
-            const roleValues = Object.values(roleData);
+
+            // Sort roles and get top 5
+            const sortedRoles = Object.entries(roleData)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+
+            const roleLabels = sortedRoles.map(([role]) => role);
+            const roleValues = sortedRoles.map(([,count]) => count);
 
             if (document.getElementById('roleChart')) {
                  if (chartInstances.role) chartInstances.role.destroy();
                 chartInstances.role = new Chart(
                     document.getElementById('roleChart').getContext('2d'),
                     {
-                        type: 'pie',
+                        type: 'bar',
                         data: {
                             labels: roleLabels,
                             datasets: [{
                                 label: 'Attendance by Role',
                                 data: roleValues,
-                                backgroundColor: [
-                                    'rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)',
-                                    'rgba(255, 206, 86, 0.7)', 'rgba(75, 192, 192, 0.7)',
-                                    'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)'
-                                ],
-                                borderColor: 'rgba(255, 255, 255, 0.8)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.6)', // Single color for bar chart
+                                borderColor: 'rgba(54, 162, 235, 1)',
                                 borderWidth: 1
                             }]
                         },
                         options: {
+                            indexAxis: 'y', // Make it a horizontal bar chart
                             responsive: true,
-                            plugins: { legend: { position: 'top' } }
+                            plugins: { legend: { display: false } }, // Hide legend if only one color or not needed
+                            scales: {
+                                x: {
+                                    title: { display: true, text: 'Attendance Count' },
+                                    beginAtZero: true
+                                },
+                                y: {
+                                    title: { display: true, text: 'Role' }
+                                }
+                            }
                         }
                     }
                 );
